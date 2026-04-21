@@ -1,0 +1,73 @@
+{
+  "name": "Investor",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Full name"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "investor_type": {
+      "type": "string",
+      "enum": [
+        "retail",
+        "hni",
+        "institutional"
+      ],
+      "default": "retail"
+    },
+    "fund_name": {
+      "type": "string",
+      "description": "Primary fund"
+    },
+    "aum": {
+      "type": "number",
+      "description": "Total AUM in Naira"
+    },
+    "kyc_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "bvn_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "kyc_level": {
+      "type": "string",
+      "enum": [
+        "level_1",
+        "level_2",
+        "level_3"
+      ],
+      "default": "level_1"
+    },
+    "bank_name": {
+      "type": "string"
+    },
+    "bank_account": {
+      "type": "string"
+    },
+    "risk_score": {
+      "type": "string",
+      "enum": [
+        "conservative",
+        "moderate",
+        "aggressive"
+      ],
+      "default": "moderate"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "name": "OperationsTask",
+  "type": "object",
+  "properties": {
+    "task_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "completed_time": {
+      "type": "string",
+      "description": "Time completed e.g. 09:14"
+    },
+    "task_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "market_data",
+        "reconciliation",
+        "compliance",
+        "nav",
+        "settlement",
+        "reporting"
+      ],
+      "default": "market_data"
+    },
+    "sort_order": {
+      "type": "number",
+      "description": "Order in the daily checklist"
+    }
+  },
+  "required": [
+    "task_name"
+  ]
+}

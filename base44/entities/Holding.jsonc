@@ -1,0 +1,69 @@
+{
+  "name": "Holding",
+  "type": "object",
+  "properties": {
+    "fund_id": {
+      "type": "string",
+      "description": "Reference to Fund"
+    },
+    "security_name": {
+      "type": "string",
+      "description": "Security name"
+    },
+    "ticker": {
+      "type": "string",
+      "description": "Ticker symbol"
+    },
+    "security_type": {
+      "type": "string",
+      "enum": [
+        "equity",
+        "fgn_bond",
+        "corp_bond",
+        "tbill",
+        "commercial_paper",
+        "reit",
+        "etf",
+        "cash"
+      ],
+      "description": "Type of security"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Number of units held"
+    },
+    "cost_price": {
+      "type": "number",
+      "description": "Average cost price per unit in Naira"
+    },
+    "current_price": {
+      "type": "number",
+      "description": "Current market price per unit"
+    },
+    "market_value": {
+      "type": "number",
+      "description": "Current market value in Naira"
+    },
+    "pnl_percent": {
+      "type": "number",
+      "description": "Unrealised P&L percentage"
+    },
+    "weight": {
+      "type": "number",
+      "description": "Percentage of fund AUM"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Sector classification"
+    },
+    "change_7d": {
+      "type": "number",
+      "description": "7-day price change percentage"
+    }
+  },
+  "required": [
+    "fund_id",
+    "security_name",
+    "ticker"
+  ]
+}

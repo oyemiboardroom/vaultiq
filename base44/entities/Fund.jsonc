@@ -1,0 +1,107 @@
+{
+  "name": "Fund",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Fund name e.g. ACP Equity Fund I"
+    },
+    "short_name": {
+      "type": "string",
+      "description": "Short name for display"
+    },
+    "asset_class": {
+      "type": "string",
+      "enum": [
+        "equities",
+        "fixed_income",
+        "money_market",
+        "balanced",
+        "real_estate",
+        "dollar_fund"
+      ],
+      "description": "Primary asset class"
+    },
+    "description": {
+      "type": "string",
+      "description": "Fund description"
+    },
+    "nav_per_unit": {
+      "type": "number",
+      "description": "Current NAV per unit in Naira"
+    },
+    "total_nav": {
+      "type": "number",
+      "description": "Total fund NAV in Naira"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "low_medium",
+        "medium",
+        "high"
+      ],
+      "description": "Risk classification"
+    },
+    "min_investment": {
+      "type": "number",
+      "description": "Minimum investment amount in Naira"
+    },
+    "management_fee": {
+      "type": "number",
+      "description": "Annual management fee percentage"
+    },
+    "benchmark": {
+      "type": "string",
+      "description": "Benchmark index name"
+    },
+    "return_1m": {
+      "type": "number"
+    },
+    "return_3m": {
+      "type": "number"
+    },
+    "return_6m": {
+      "type": "number"
+    },
+    "return_ytd": {
+      "type": "number"
+    },
+    "return_1y": {
+      "type": "number"
+    },
+    "return_3y_pa": {
+      "type": "number"
+    },
+    "return_since_inception": {
+      "type": "number"
+    },
+    "benchmark_return_ytd": {
+      "type": "number"
+    },
+    "alpha": {
+      "type": "number"
+    },
+    "sharpe_ratio": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "pipeline",
+        "closed"
+      ],
+      "default": "active"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon identifier for the fund"
+    }
+  },
+  "required": [
+    "name",
+    "asset_class"
+  ]
+}

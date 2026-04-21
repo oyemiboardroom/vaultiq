@@ -1,0 +1,64 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string",
+      "description": "Unique order identifier"
+    },
+    "security_name": {
+      "type": "string"
+    },
+    "ticker": {
+      "type": "string"
+    },
+    "fund_name": {
+      "type": "string",
+      "description": "Fund name"
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "buy",
+        "sell"
+      ],
+      "description": "Buy or Sell"
+    },
+    "quantity": {
+      "type": "number"
+    },
+    "limit_price": {
+      "type": "number",
+      "description": "Limit price per unit"
+    },
+    "filled_quantity": {
+      "type": "number"
+    },
+    "avg_price": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "partial",
+        "filled",
+        "cancelled",
+        "rejected"
+      ],
+      "default": "open"
+    },
+    "broker": {
+      "type": "string"
+    },
+    "order_time": {
+      "type": "string",
+      "description": "Time order was placed"
+    }
+  },
+  "required": [
+    "order_id",
+    "security_name",
+    "side"
+  ]
+}

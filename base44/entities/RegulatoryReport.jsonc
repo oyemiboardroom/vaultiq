@@ -1,0 +1,51 @@
+{
+  "name": "RegulatoryReport",
+  "type": "object",
+  "properties": {
+    "report_name": {
+      "type": "string"
+    },
+    "regulator": {
+      "type": "string",
+      "enum": [
+        "sec_nigeria",
+        "firs",
+        "naicom",
+        "nfiu"
+      ],
+      "description": "Regulatory body"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "monthly",
+        "quarterly",
+        "annual"
+      ]
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "due_soon",
+        "submitted",
+        "overdue"
+      ],
+      "default": "not_started"
+    },
+    "period": {
+      "type": "string",
+      "description": "Reporting period e.g. April 2026"
+    }
+  },
+  "required": [
+    "report_name",
+    "regulator"
+  ]
+}

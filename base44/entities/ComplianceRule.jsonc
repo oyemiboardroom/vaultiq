@@ -1,0 +1,59 @@
+{
+  "name": "ComplianceRule",
+  "type": "object",
+  "properties": {
+    "rule_name": {
+      "type": "string",
+      "description": "Name of the compliance rule"
+    },
+    "description": {
+      "type": "string"
+    },
+    "fund_name": {
+      "type": "string",
+      "description": "Applicable fund or All funds"
+    },
+    "current_value": {
+      "type": "number",
+      "description": "Current measured value"
+    },
+    "limit_value": {
+      "type": "number",
+      "description": "Limit/threshold value"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "warning",
+        "breach"
+      ],
+      "default": "pass"
+    },
+    "rule_type": {
+      "type": "string",
+      "enum": [
+        "concentration",
+        "sector",
+        "liquidity",
+        "leverage",
+        "counterparty",
+        "related_party",
+        "bond_minimum"
+      ],
+      "description": "Type of rule"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "soft",
+        "hard"
+      ],
+      "default": "soft"
+    }
+  },
+  "required": [
+    "rule_name",
+    "status"
+  ]
+}

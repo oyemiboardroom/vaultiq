@@ -1,0 +1,172 @@
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { formatNaira, formatPercent, getReturnColorLight } from '@/lib/formatters';
+import { BarChart3, Landmark, Wallet, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+
+const icons = { equities: BarChart3, fixed_income: Landmark, money_market: Wallet, balanced: TrendingUp };
+
+export default function Invest() {
+  const [selectedFund, setSelectedFund] = useState(null);
+  const [amount, setAmount] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const { data: funds = [] } = useQuery({
+    queryKey: ['funds'],
+    queryFn: () => base44.entities.Fund.list(),
+  });
+
+  const handleInvest = () => {
+    if (selectedFund && amount) {
+      setShowSuccess(true);
+    }
+  };
+
+  const activeFunds = funds.filter(f => f.status === 'active');
+
+  return (
+    <div className="px-4 py-6 max-w-lg mx-auto">
+      <h1 className="text-foreground text-xl font-display font-semibold mb-1">Invest</h1>
+
+      {/* Wallet */}
+      <div className="bg-gold-light rounded-xl p-4 mb-5 border border-accent/20">
+        <p className="text-accent text-[10px] font-medium uppercase tracking-wider">Wallet Balance</p>
+        <p className="text-foreground text-xl font-bold font-display mt-0.5">₦500,000.00</p>
+        <p className="text-muted-foreground text-[10px] mt-1">Top-up · 0123456789 · Providus Bank</p>
+      </div>
+
+      <h3 className="text-foreground text-sm font-semibold mb-3">Choose a Fund</h3>
+
+      {/* Fund Selection */}
+      <div className="space-y-3 mb-6">
+        {activeFunds.map((fund) => {
+          const Icon = icons[fund.asset_class] || BarChart3;
+          const isSelected = selectedFund?.id === fund.id;
+          return (
+            <button
+              key={fund.id}
+              onClick={() => setSelectedFund(fund)}
+              className={`w-full text-left bg-card rounded-xl p-4 border transition-all ${
+                isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-foreground text-sm font-semibold">{fund.short_name || fund.name}</p>
+                      {isSelected && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                    </div>
+                    <p className="text-muted-foreground text-[10px] mt-0.5">{fund.description || fund.asset_class?.replace('_', ' ')}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-border">
+                <div>
+                  <p className="text-muted-foreground text-[9px]">1Y Return</p>
+                  <p className={`text-xs font-mono font-semibold ${getReturnColorLight(fund.return_1y)}`}>{formatPercent(fund.return_1y)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-[9px]">Risk Level</p>
+                  <p className="text-xs font-medium text-foreground">{fund.risk_level?.replace('_', '-') || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-[9px]">Min. Invest</p>
+                  <p className="text-xs font-mono text-foreground">{formatNaira(fund.min_investment, true)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-[9px]">NAV/unit</p>
+                  <p className="text-xs font-mono text-foreground">{formatNaira(fund.nav_per_unit)}</p>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Amount Input */}
+      {selectedFund && (
+        <div className="bg-card rounded-xl border border-border p-4 mb-4">
+          <p className="text-foreground text-sm font-semibold mb-3">
+            Invest in {selectedFund.short_name || selectedFund.name}
+          </p>
+          <p className="text-muted-foreground text-xs mb-2">
+            Current NAV: {formatNaira(selectedFund.nav_per_unit)} / unit · Min. {formatNaira(selectedFund.min_investment, true)}
+          </p>
+          <Input
+            type="number"
+            placeholder="Amount (₦)"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="text-lg font-mono mb-3"
+          />
+          {amount && (
+            <p className="text-muted-foreground text-xs mb-3">
+              ≈ {Math.floor(Number(amount) / (selectedFund.nav_per_unit || 1))} units · Settlement T+1
+            </p>
+          )}
+          <div className="flex gap-2 mb-3">
+            {['50000', '100000', '500000', '1000000'].map((v) => (
+              <button
+                key={v}
+                onClick={() => setAmount(v)}
+                className="px-2.5 py-1 rounded-lg bg-muted text-xs font-medium text-foreground hover:bg-primary/10 transition-colors"
+              >
+                {formatNaira(Number(v), true)}
+              </button>
+            ))}
+          </div>
+          <Button
+            onClick={handleInvest}
+            disabled={!amount || Number(amount) < (selectedFund.min_investment || 0)}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            Confirm Investment →
+          </Button>
+        </div>
+      )}
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <DialogContent className="max-w-sm text-center">
+          <div className="flex flex-col items-center py-4">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+            </div>
+            <h2 className="text-lg font-display font-bold mb-2">Investment Successful!</h2>
+            <p className="text-muted-foreground text-sm mb-4">
+              Your investment has been placed. Units will be allocated at today's NAV after market close.
+            </p>
+            <div className="w-full bg-muted rounded-lg p-3 text-xs space-y-2 text-left">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Fund</span>
+                <span className="font-medium">{selectedFund?.short_name || selectedFund?.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Amount</span>
+                <span className="font-medium font-mono">{formatNaira(Number(amount))}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">NAV/Unit</span>
+                <span className="font-medium font-mono">{formatNaira(selectedFund?.nav_per_unit)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Units</span>
+                <span className="font-medium font-mono">~{Math.floor(Number(amount) / (selectedFund?.nav_per_unit || 1))}</span>
+              </div>
+            </div>
+            <Button onClick={() => { setShowSuccess(false); setAmount(''); setSelectedFund(null); }} className="mt-4 w-full">
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

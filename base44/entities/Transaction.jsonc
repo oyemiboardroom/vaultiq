@@ -1,0 +1,59 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "investor_name": {
+      "type": "string"
+    },
+    "fund_name": {
+      "type": "string"
+    },
+    "transaction_type": {
+      "type": "string",
+      "enum": [
+        "subscription",
+        "redemption",
+        "dividend",
+        "interest",
+        "auto_invest"
+      ],
+      "description": "Type of transaction"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Amount in Naira"
+    },
+    "units": {
+      "type": "number",
+      "description": "Number of units"
+    },
+    "nav_per_unit": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "settled",
+        "credited",
+        "paid_out",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "reference": {
+      "type": "string",
+      "description": "Transaction reference"
+    },
+    "settlement_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "investor_name",
+    "fund_name",
+    "transaction_type",
+    "amount"
+  ]
+}
