@@ -28,6 +28,7 @@ import MyFunds from '@/pages/investor/MyFunds';
 import Invest from '@/pages/investor/Invest';
 import Activity from '@/pages/investor/Activity';
 import Account from '@/pages/investor/Account';
+import FundDetail from '@/pages/investor/FundDetail';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -76,6 +77,7 @@ const AuthenticatedApp = () => {
         <Route path="/investor/invest" element={<Invest />} />
         <Route path="/investor/activity" element={<Activity />} />
         <Route path="/investor/account" element={<Account />} />
+        <Route path="/investor/funds/:fundId" element={<FundDetail />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

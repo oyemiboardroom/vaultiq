@@ -1,38 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { formatNaira, formatPercent, getReturnColorLight } from '@/lib/formatters';
-import { BarChart3, Landmark, Wallet, TrendingUp } from 'lucide-react';
+import { BarChart3, Landmark, Wallet, TrendingUp, ArrowUpRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const growthData = [
-  { date: 'Jan', value: 13200 },
-  { date: 'Feb', value: 13600 },
-  { date: 'Mar', value: 14100 },
-  { date: 'Apr', value: 13900 },
-  { date: 'May', value: 14400 },
-  { date: 'Jun', value: 14800 },
-  { date: 'Jul', value: 15100 },
-  { date: 'Aug', value: 15400 },
-  { date: 'Sep', value: 15200 },
-  { date: 'Oct', value: 15600 },
-  { date: 'Nov', value: 15500 },
-  { date: 'Dec', value: 15868 },
-];
+import { Link } from 'react-router-dom';
+import { usePortfolio } from '@/hooks/usePortfolio';
 
 const icons = { equities: BarChart3, fixed_income: Landmark, money_market: Wallet, balanced: TrendingUp };
 
+const allGrowthData = {
+  '1m': [
+    { date: 'W1', value: 97 }, { date: 'W2', value: 98.2 }, { date: 'W3', value: 99.1 }, { date: 'W4', value: 100 },
+  ],
+  '3m': [
+    { date: 'Jan', value: 95 }, { date: 'Feb', value: 97.5 }, { date: 'Mar', value: 100 },
+  ],
+  '6m': [
+    { date: 'Oct', value: 90 }, { date: 'Nov', value: 92 }, { date: 'Dec', value: 94 },
+    { date: 'Jan', value: 95.5 }, { date: 'Feb', value: 97.5 }, { date: 'Mar', value: 100 },
+  ],
+  '1y': [
+    { date: 'Apr', value: 83.2 }, { date: 'May', value: 85 }, { date: 'Jun', value: 87.4 },
+    { date: 'Jul', value: 89.5 }, { date: 'Aug', value: 91.2 }, { date: 'Sep', value: 90.3 },
+    { date: 'Oct', value: 92.5 }, { date: 'Nov', value: 93.8 }, { date: 'Dec', value: 95.1 },
+    { date: 'Jan', value: 96.4 }, { date: 'Feb', value: 98.2 }, { date: 'Mar', value: 100 },
+  ],
+  'all': [
+    { date: '2022', value: 65 }, { date: '2023', value: 74 }, { date: '2024', value: 88 },
+    { date: 'Q1\'25', value: 94 }, { date: 'Q2\'25', value: 96 }, { date: 'Q3\'25', value: 98 }, { date: 'Now', value: 100 },
+  ],
+};
+
 export default function MyFunds() {
   const [period, setPeriod] = useState('1y');
+  const { invested, totalValue, totalGain, gainPercent, dailyChange, byFund } = usePortfolio();
 
   const { data: funds = [] } = useQuery({
     queryKey: ['funds'],
     queryFn: () => base44.entities.Fund.list(),
   });
 
-  const totalValue = 15868420;
-  const totalGain = 1668420;
+  // Scale chart data relative to actual portfolio value
+  const chartData = useMemo(() => {
+    const raw = allGrowthData[period] || allGrowthData['1y'];
+    if (totalValue <= 0) return raw.map(d => ({ ...d, value: 0 }));
+    return raw.map(d => ({ ...d, value: Math.round((d.value / 100) * totalValue / 1000) }));
+  }, [period, totalValue]);
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
@@ -40,8 +55,15 @@ export default function MyFunds() {
       <p className="text-foreground text-2xl font-display font-bold">{formatNaira(totalValue)}</p>
 
       <div className="flex items-center gap-2 mt-1 mb-5">
-        <span className="text-emerald-600 text-xs font-medium">+{formatNaira(totalGain)} +11.7%</span>
-        <span className="text-muted-foreground text-xs">Portfolio Growth</span>
+        {totalGain > 0 ? (
+          <>
+            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-emerald-600 text-xs font-medium">+{formatNaira(totalGain)} ({formatPercent(gainPercent)})</span>
+            <span className="text-muted-foreground text-xs">Total Gain</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground text-xs">Start investing to see your portfolio grow</span>
+        )}
       </div>
 
       {/* Chart */}
@@ -55,7 +77,7 @@ export default function MyFunds() {
         </Tabs>
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={growthData}>
+            <AreaChart key={period} data={chartData}>
               <defs>
                 <linearGradient id="portfolioGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(150, 70%, 15%)" stopOpacity={0.3}/>
@@ -78,8 +100,10 @@ export default function MyFunds() {
       <div className="space-y-3">
         {funds.filter(f => f.status === 'active').map((fund) => {
           const Icon = icons[fund.asset_class] || BarChart3;
+          const myInvested = byFund[fund.name] || 0;
+          const myValue = myInvested > 0 ? myInvested * 1.112 : 0;
           return (
-            <div key={fund.id} className="bg-card rounded-xl p-4 border border-border">
+            <Link key={fund.id} to={`/investor/funds/${fund.id}`} className="block bg-card rounded-xl p-4 border border-border hover:border-primary/30 transition-colors">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -91,13 +115,30 @@ export default function MyFunds() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-foreground text-sm font-bold font-mono">{formatNaira(fund.total_nav, true)}</p>
-                  <span className={`text-[10px] font-medium ${getReturnColorLight(fund.return_ytd)}`}>
+                  <p className={`text-sm font-mono font-bold ${getReturnColorLight(fund.return_ytd)}`}>
                     {formatPercent(fund.return_ytd)} YTD
-                  </span>
+                  </p>
                 </div>
               </div>
-            </div>
+
+              {/* My value in this fund */}
+              <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+                <div>
+                  <p className="text-muted-foreground text-[10px]">My Value</p>
+                  <p className="text-foreground text-sm font-mono font-semibold mt-0.5">
+                    {myValue > 0 ? formatNaira(myValue) : '—'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-muted-foreground text-[10px]">NAV/unit</p>
+                  <p className="text-foreground text-xs font-mono mt-0.5">{formatNaira(fund.nav_per_unit)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-muted-foreground text-[10px]">Risk</p>
+                  <p className="text-foreground text-xs mt-0.5">{fund.risk_level?.replace('_', '-')}</p>
+                </div>
+              </div>
+            </Link>
           );
         })}
       </div>
@@ -108,7 +149,7 @@ export default function MyFunds() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <p className="text-muted-foreground text-[10px]">Total Invested</p>
-            <p className="text-foreground text-sm font-semibold">₦14,200,000</p>
+            <p className="text-foreground text-sm font-semibold">{formatNaira(invested)}</p>
           </div>
           <div>
             <p className="text-muted-foreground text-[10px]">Current Value</p>
@@ -116,7 +157,9 @@ export default function MyFunds() {
           </div>
           <div>
             <p className="text-muted-foreground text-[10px]">Total Return</p>
-            <p className="text-emerald-600 text-sm font-semibold">+{formatNaira(totalGain)}</p>
+            <p className={`text-sm font-semibold ${getReturnColorLight(totalGain)}`}>
+              {totalGain >= 0 ? '+' : ''}{formatNaira(totalGain)}
+            </p>
           </div>
           <div>
             <p className="text-muted-foreground text-[10px]">Annualised</p>

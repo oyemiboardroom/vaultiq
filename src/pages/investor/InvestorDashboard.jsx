@@ -3,8 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { formatNaira, formatPercent, getReturnColorLight } from '@/lib/formatters';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, ArrowDownRight, TrendingUp, Wallet, History, FileText, BarChart3, Landmark } from 'lucide-react';
+import { ArrowUpRight, TrendingUp, Wallet, History, FileText, BarChart3, Landmark } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { usePortfolio } from '@/hooks/usePortfolio';
 
 const marketData = [
   { label: 'NGX ASI', value: '108,421', change: '+1.24%', up: true },
@@ -15,33 +16,12 @@ const marketData = [
 
 export default function InvestorDashboard() {
   const { user } = useCurrentUser();
+  const { invested, totalValue, totalGain, gainPercent, dailyChange } = usePortfolio();
 
   const { data: funds = [] } = useQuery({
     queryKey: ['funds'],
     queryFn: () => base44.entities.Fund.list(),
   });
-
-  const { data: myTransactions = [] } = useQuery({
-    queryKey: ['my-transactions', user?.email],
-    queryFn: () => base44.entities.Transaction.filter({ created_by: user.email }),
-    enabled: !!user?.email,
-  });
-
-  // Compute portfolio from user's actual transactions
-  const totalInvested = myTransactions
-    .filter(t => t.transaction_type === 'subscription' || t.transaction_type === 'auto_invest')
-    .filter(t => t.status !== 'cancelled')
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-  const totalRedeemed = myTransactions
-    .filter(t => t.transaction_type === 'redemption')
-    .filter(t => t.status !== 'cancelled')
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-  const invested = totalInvested - totalRedeemed;
-  const totalValue = invested > 0 ? invested * 1.112 : 0; // ~11.2% estimated gain
-  const totalGain = totalValue - invested;
-  const dailyChange = totalValue * 0.0091;
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
@@ -71,11 +51,13 @@ export default function InvestorDashboard() {
           </div>
           <div>
             <p className="text-primary-foreground/50 text-[10px] uppercase">Total Gain</p>
-            <p className="text-sm font-semibold mt-0.5 text-emerald-300">+{formatNaira(totalGain, true)}</p>
+            <p className="text-sm font-semibold mt-0.5 text-emerald-300">
+              {totalGain > 0 ? '+' : ''}{formatNaira(totalGain, true)}
+            </p>
           </div>
           <div>
-            <p className="text-primary-foreground/50 text-[10px] uppercase">Yield (Ann.)</p>
-            <p className="text-sm font-semibold mt-0.5">17.4% p.a.</p>
+            <p className="text-primary-foreground/50 text-[10px] uppercase">Return</p>
+            <p className="text-sm font-semibold mt-0.5 text-emerald-300">{formatPercent(gainPercent)}</p>
           </div>
         </div>
       </div>
