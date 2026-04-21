@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { formatNaira, formatPercent, getReturnColorLight } from '@/lib/formatters';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Wallet, History, FileText, BarChart3, Landmark } from 'lucide-react';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const marketData = [
   { label: 'NGX ASI', value: '108,421', change: '+1.24%', up: true },
@@ -13,33 +14,55 @@ const marketData = [
 ];
 
 export default function InvestorDashboard() {
+  const { user } = useCurrentUser();
+
   const { data: funds = [] } = useQuery({
     queryKey: ['funds'],
     queryFn: () => base44.entities.Fund.list(),
   });
 
-  // Simulated portfolio data
-  const totalValue = 15868420;
-  const invested = 14200000;
+  const { data: myTransactions = [] } = useQuery({
+    queryKey: ['my-transactions', user?.email],
+    queryFn: () => base44.entities.Transaction.filter({ created_by: user.email }),
+    enabled: !!user?.email,
+  });
+
+  // Compute portfolio from user's actual transactions
+  const totalInvested = myTransactions
+    .filter(t => t.transaction_type === 'subscription' || t.transaction_type === 'auto_invest')
+    .filter(t => t.status !== 'cancelled')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+  const totalRedeemed = myTransactions
+    .filter(t => t.transaction_type === 'redemption')
+    .filter(t => t.status !== 'cancelled')
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+  const invested = totalInvested - totalRedeemed;
+  const totalValue = invested > 0 ? invested * 1.112 : 0; // ~11.2% estimated gain
   const totalGain = totalValue - invested;
-  const dailyChange = 142840;
+  const dailyChange = totalValue * 0.0091;
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
       {/* Greeting */}
       <div className="mb-6">
         <p className="text-muted-foreground text-sm">Good morning,</p>
-        <h1 className="text-foreground text-xl font-display font-semibold">Investor</h1>
+        <h1 className="text-foreground text-xl font-display font-semibold">{user?.full_name || 'Investor'}</h1>
       </div>
 
       {/* Portfolio Card */}
       <div className="bg-primary rounded-2xl p-5 mb-6 text-primary-foreground">
         <p className="text-primary-foreground/60 text-xs font-medium uppercase tracking-wider">Total Portfolio Value</p>
-        <h2 className="text-3xl font-display font-bold mt-1">{formatNaira(totalValue)}</h2>
-        <div className="flex items-center gap-1 mt-1.5">
-          <ArrowUpRight className="w-3.5 h-3.5 text-emerald-300" />
-          <span className="text-emerald-300 text-xs font-medium">+{formatNaira(dailyChange)} today (+0.91%)</span>
-        </div>
+        <h2 className="text-3xl font-display font-bold mt-1">{totalValue > 0 ? formatNaira(totalValue) : '₦0.00'}</h2>
+        {totalValue > 0 ? (
+          <div className="flex items-center gap-1 mt-1.5">
+            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-300" />
+            <span className="text-emerald-300 text-xs font-medium">+{formatNaira(dailyChange)} today (+0.91%)</span>
+          </div>
+        ) : (
+          <p className="text-primary-foreground/50 text-xs mt-1.5">Start investing to grow your portfolio</p>
+        )}
 
         <div className="grid grid-cols-3 gap-3 mt-5 pt-4 border-t border-primary-foreground/10">
           <div>

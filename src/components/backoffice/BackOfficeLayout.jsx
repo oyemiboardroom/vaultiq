@@ -1,10 +1,27 @@
 import React, { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import BackOfficeSidebar from './BackOfficeSidebar';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ShieldOff } from 'lucide-react';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export default function BackOfficeLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, isLoading } = useCurrentUser();
+
+  if (!isLoading && user && user.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-navy flex items-center justify-center dark">
+        <div className="text-center px-6">
+          <ShieldOff className="w-12 h-12 text-white/20 mx-auto mb-4" />
+          <h2 className="text-white text-lg font-heading font-semibold">Access Restricted</h2>
+          <p className="text-white/40 text-sm mt-2 mb-5">The Back Office is for administrators only.</p>
+          <Link to="/investor" className="px-4 py-2 rounded-lg bg-teal/20 text-teal text-sm font-medium hover:bg-teal/30 transition-colors">
+            Go to Investor Portal →
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-navy dark">

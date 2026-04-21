@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { formatNaira } from '@/lib/formatters';
 import { TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const typeConfig = {
   subscription: { icon: TrendingUp, color: 'bg-primary/10 text-primary', sign: '-' },
@@ -22,9 +23,12 @@ const statusStyle = {
 };
 
 export default function Activity() {
+  const { user } = useCurrentUser();
+
   const { data: transactions = [] } = useQuery({
-    queryKey: ['transactions'],
-    queryFn: () => base44.entities.Transaction.list('-created_date', 50),
+    queryKey: ['my-transactions', user?.email],
+    queryFn: () => base44.entities.Transaction.filter({ created_by: user.email }, '-created_date', 50),
+    enabled: !!user?.email,
   });
 
   // Group by date

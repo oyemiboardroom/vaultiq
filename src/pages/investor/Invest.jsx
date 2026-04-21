@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { formatNaira, formatPercent, getReturnColorLight } from '@/lib/formatters';
 import { BarChart3, Landmark, Wallet, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const icons = { equities: BarChart3, fixed_income: Landmark, money_market: Wallet, balanced: TrendingUp };
 
@@ -13,16 +14,32 @@ export default function Invest() {
   const [selectedFund, setSelectedFund] = useState(null);
   const [amount, setAmount] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useCurrentUser();
+  const queryClient = useQueryClient();
 
   const { data: funds = [] } = useQuery({
     queryKey: ['funds'],
     queryFn: () => base44.entities.Fund.list(),
   });
 
-  const handleInvest = () => {
-    if (selectedFund && amount) {
-      setShowSuccess(true);
-    }
+  const handleInvest = async () => {
+    if (!selectedFund || !amount || !user) return;
+    setIsSubmitting(true);
+    const units = Math.floor(Number(amount) / (selectedFund.nav_per_unit || 1));
+    await base44.entities.Transaction.create({
+      investor_name: user.full_name || user.email,
+      fund_name: selectedFund.name,
+      transaction_type: 'subscription',
+      amount: Number(amount),
+      units,
+      nav_per_unit: selectedFund.nav_per_unit,
+      status: 'pending',
+      reference: `SUB-${Date.now()}`,
+    });
+    queryClient.invalidateQueries({ queryKey: ['my-transactions'] });
+    setIsSubmitting(false);
+    setShowSuccess(true);
   };
 
   const activeFunds = funds.filter(f => f.status === 'active');
@@ -124,10 +141,10 @@ export default function Invest() {
           </div>
           <Button
             onClick={handleInvest}
-            disabled={!amount || Number(amount) < (selectedFund.min_investment || 0)}
+            disabled={isSubmitting || !amount || Number(amount) < (selectedFund.min_investment || 0)}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
-            Confirm Investment →
+            {isSubmitting ? 'Processing...' : 'Confirm Investment →'}
           </Button>
         </div>
       )}
