@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { formatNaira, formatPercent, getReturnColorLight } from '@/lib/formatters';
@@ -31,6 +31,7 @@ export default function Invest() {
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
   const { balance, debit } = useWallet();
+  const amountRef = useRef(null);
 
   const { data: funds = [] } = useQuery({
     queryKey: ['funds'],
@@ -39,6 +40,22 @@ export default function Invest() {
 
   const activeFunds = funds.filter(f => f.status === 'active');
   const filteredFunds = activeTab === 'all' ? activeFunds : activeFunds.filter(f => f.asset_class === activeTab);
+
+  // Auto-select fund from URL param (e.g. coming from FundDetail)
+  useEffect(() => {
+    if (funds.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const fundId = params.get('fundId');
+    if (!fundId) return;
+    const match = funds.find(f => f.id === fundId);
+    if (match) {
+      setSelectedFund(match);
+      // Switch tab to match the fund's asset class
+      setActiveTab(match.asset_class || 'all');
+      // Focus amount input after a short delay to let the component render
+      setTimeout(() => amountRef.current?.focus(), 150);
+    }
+  }, [funds]);
 
   // Only show tabs that have funds
   const availableTabs = assetClassTabs.filter(tab =>
@@ -166,6 +183,7 @@ export default function Invest() {
             NAV: {formatNaira(selectedFund.nav_per_unit)} / unit · Min. {formatNaira(selectedFund.min_investment, true)}
           </p>
           <Input
+            ref={amountRef}
             type="number"
             placeholder="Amount (₦)"
             value={amount}

@@ -254,7 +254,7 @@ export default function FundDetail() {
 
       {/* CTA */}
       <Link
-        to="/investor/invest"
+        to={`/investor/invest?fundId=${fund.id}`}
         className="block w-full text-center py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
       >
         Invest in this Fund →
