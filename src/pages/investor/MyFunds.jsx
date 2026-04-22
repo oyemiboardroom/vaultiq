@@ -100,8 +100,10 @@ export default function MyFunds() {
       <div className="space-y-3">
         {funds.filter(f => f.status === 'active').map((fund) => {
           const Icon = icons[fund.asset_class] || BarChart3;
-          const myInvested = byFund[fund.name] || 0;
-          const myValue = myInvested > 0 ? myInvested * 1.112 : 0;
+          // My value = NAV per unit × units held (from settled transactions)
+          const fundData = byFund[fund.name] || { units: 0, invested: 0 };
+          const myUnits = Math.max(0, fundData.units);
+          const myValue = myUnits > 0 && fund.nav_per_unit > 0 ? myUnits * fund.nav_per_unit : 0;
           return (
             <Link key={fund.id} to={`/investor/funds/${fund.id}`} className="block bg-card rounded-xl p-4 border border-border hover:border-primary/30 transition-colors">
               <div className="flex items-start justify-between">
@@ -123,20 +125,20 @@ export default function MyFunds() {
 
               {/* My value in this fund */}
               <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
-                <div>
-                  <p className="text-muted-foreground text-[10px]">My Value</p>
-                  <p className="text-foreground text-sm font-mono font-semibold mt-0.5">
-                    {myValue > 0 ? formatNaira(myValue) : '—'}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground text-[10px]">NAV/unit</p>
-                  <p className="text-foreground text-xs font-mono mt-0.5">{formatNaira(fund.nav_per_unit)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground text-[10px]">Risk</p>
-                  <p className="text-foreground text-xs mt-0.5">{fund.risk_level?.replace('_', '-')}</p>
-                </div>
+              <div>
+                <p className="text-muted-foreground text-[10px]">My Value</p>
+                <p className="text-foreground text-sm font-mono font-semibold mt-0.5">
+                  {myValue > 0 ? formatNaira(myValue) : '—'}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-muted-foreground text-[10px]">My Units</p>
+                <p className="text-foreground text-xs font-mono mt-0.5">{myUnits > 0 ? myUnits.toLocaleString('en-NG', { maximumFractionDigits: 2 }) : '—'}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-muted-foreground text-[10px]">NAV/unit</p>
+                <p className="text-foreground text-xs font-mono mt-0.5">{formatNaira(fund.nav_per_unit)}</p>
+              </div>
               </div>
             </Link>
           );

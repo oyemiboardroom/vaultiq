@@ -27,13 +27,19 @@ export function usePortfolio() {
   const gainPercent = invested > 0 ? (totalGain / invested) * 100 : 0;
   const dailyChange = totalValue * 0.0091;
 
-  // Per-fund invested amounts
+  // Per-fund: invested amounts and units accumulated
   const byFund = myTransactions.reduce((acc, t) => {
     if (t.status === 'cancelled') return acc;
     const fn = t.fund_name;
-    if (!acc[fn]) acc[fn] = 0;
-    if (t.transaction_type === 'subscription' || t.transaction_type === 'auto_invest') acc[fn] += t.amount || 0;
-    if (t.transaction_type === 'redemption') acc[fn] -= t.amount || 0;
+    if (!acc[fn]) acc[fn] = { invested: 0, units: 0 };
+    if (t.transaction_type === 'subscription' || t.transaction_type === 'auto_invest') {
+      acc[fn].invested += t.amount || 0;
+      acc[fn].units += t.units || 0;
+    }
+    if (t.transaction_type === 'redemption') {
+      acc[fn].invested -= t.amount || 0;
+      acc[fn].units -= t.units || 0;
+    }
     return acc;
   }, {});
 

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { formatNaira, formatPercent, getReturnColorLight } from '@/lib/formatters';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, TrendingUp, Wallet, History, FileText, BarChart3, Landmark } from 'lucide-react';
+import { ArrowUpRight, TrendingUp, Wallet, History, FileText, BarChart3, Landmark, Eye, EyeOff, Building2 } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePortfolio } from '@/hooks/usePortfolio';
 
@@ -14,8 +14,15 @@ const marketData = [
   { label: '91D T-BILL', value: '26.4%', change: 'Unchanged', up: null },
 ];
 
+const assetClasses = [
+  { label: 'Mutual Funds', icon: TrendingUp, tab: 'mutual_fund' },
+  { label: 'Stocks', icon: BarChart3, tab: 'equity' },
+  { label: 'Fixed Income', icon: Landmark, tab: 'fixed_income' },
+];
+
 export default function InvestorDashboard() {
   const { user } = useCurrentUser();
+  const [hidden, setHidden] = useState(false);
   const { invested, totalValue, totalGain, gainPercent, dailyChange } = usePortfolio();
 
   const { data: funds = [] } = useQuery({
@@ -33,12 +40,21 @@ export default function InvestorDashboard() {
 
       {/* Portfolio Card */}
       <div className="bg-primary rounded-2xl p-5 mb-6 text-primary-foreground">
-        <p className="text-primary-foreground/60 text-xs font-medium uppercase tracking-wider">Total Portfolio Value</p>
-        <h2 className="text-3xl font-display font-bold mt-1">{totalValue > 0 ? formatNaira(totalValue) : '₦0.00'}</h2>
+        <div className="flex items-center justify-between">
+          <p className="text-primary-foreground/60 text-xs font-medium uppercase tracking-wider">Total Portfolio Value</p>
+          <button onClick={() => setHidden(h => !h)} className="text-primary-foreground/50 hover:text-primary-foreground transition-colors">
+            {hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <h2 className="text-3xl font-display font-bold mt-1">
+          {hidden ? '₦ ••••••' : (totalValue > 0 ? formatNaira(totalValue) : '₦0.00')}
+        </h2>
         {totalValue > 0 ? (
           <div className="flex items-center gap-1 mt-1.5">
             <ArrowUpRight className="w-3.5 h-3.5 text-emerald-300" />
-            <span className="text-emerald-300 text-xs font-medium">+{formatNaira(dailyChange)} today (+0.91%)</span>
+            <span className="text-emerald-300 text-xs font-medium">
+              {hidden ? '••••' : `+${formatNaira(dailyChange)} today (+0.91%)`}
+            </span>
           </div>
         ) : (
           <p className="text-primary-foreground/50 text-xs mt-1.5">Start investing to grow your portfolio</p>
@@ -47,17 +63,17 @@ export default function InvestorDashboard() {
         <div className="grid grid-cols-3 gap-3 mt-5 pt-4 border-t border-primary-foreground/10">
           <div>
             <p className="text-primary-foreground/50 text-[10px] uppercase">Invested</p>
-            <p className="text-sm font-semibold mt-0.5">{formatNaira(invested, true)}</p>
+            <p className="text-sm font-semibold mt-0.5">{hidden ? '••••' : formatNaira(invested, true)}</p>
           </div>
           <div>
             <p className="text-primary-foreground/50 text-[10px] uppercase">Total Gain</p>
             <p className="text-sm font-semibold mt-0.5 text-emerald-300">
-              {totalGain > 0 ? '+' : ''}{formatNaira(totalGain, true)}
+              {hidden ? '••••' : `${totalGain > 0 ? '+' : ''}${formatNaira(totalGain, true)}`}
             </p>
           </div>
           <div>
             <p className="text-primary-foreground/50 text-[10px] uppercase">Return</p>
-            <p className="text-sm font-semibold mt-0.5 text-emerald-300">{formatPercent(gainPercent)}</p>
+            <p className="text-sm font-semibold mt-0.5 text-emerald-300">{hidden ? '•••' : formatPercent(gainPercent)}</p>
           </div>
         </div>
       </div>
@@ -115,6 +131,28 @@ export default function InvestorDashboard() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Asset Classes */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-foreground text-sm font-semibold">Explore Asset Classes</h3>
+          <Link to="/investor/securities" className="text-primary text-xs font-medium">View all →</Link>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {assetClasses.map(cls => (
+            <Link
+              key={cls.tab}
+              to={`/investor/securities?tab=${cls.tab}`}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <cls.icon className="w-5 h-5 text-primary" />
+              </div>
+              <p className="text-foreground text-[11px] font-medium text-center leading-tight">{cls.label}</p>
+            </Link>
+          ))}
         </div>
       </div>
 
