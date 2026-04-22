@@ -2,14 +2,17 @@ import React from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { FileText, Receipt, ClipboardList, Bell, Building2, Settings, LogOut, ChevronRight, ShieldCheck, BadgeCheck } from 'lucide-react';
+import { FileText, Receipt, ClipboardList, Bell, Building2, Wallet, Settings, LogOut, ChevronRight, ShieldCheck, BadgeCheck } from 'lucide-react';
+import { useWallet } from '@/hooks/useWallet';
+import { formatNaira } from '@/lib/formatters';
 
-const menuItems = [
+const staticMenuItems = [
   { icon: FileText, label: 'Account Statements', desc: 'Monthly PDF statements', path: '#' },
   { icon: Receipt, label: 'Tax Certificates', desc: 'FY2025 available · FIRS compliant', path: '#' },
   { icon: ClipboardList, label: 'KYC Documents', desc: 'NIN, BVN, address verification', path: '#' },
   { icon: Bell, label: 'Notifications', desc: 'NAV alerts · Dividend credits', path: '#' },
   { icon: Building2, label: 'Bank Accounts', desc: 'Manage linked accounts', path: '#' },
+  { icon: Wallet, label: 'Wallet', desc: 'Balance · Virtual account · Withdrawals', path: '/investor/wallet' },
   { icon: Settings, label: 'Settings', desc: 'Security · PIN · Biometrics', path: '#' },
 ];
 
@@ -18,10 +21,17 @@ export default function Account() {
     queryKey: ['me'],
     queryFn: () => base44.auth.me(),
   });
+  const { balance } = useWallet();
 
   const handleLogout = () => {
     base44.auth.logout();
   };
+
+  const menuItems = staticMenuItems.map(item =>
+    item.label === 'Wallet'
+      ? { ...item, desc: `Balance: ${formatNaira(Math.max(0, balance))} · Virtual account · Withdrawals` }
+      : item
+  );
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
